@@ -13,41 +13,57 @@ const PORT = 3000;
 // Sets up the Express app to handle data parsing
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-/*
-const characters = [
-  {
-    routeName: 'yoda',
-    name: 'Yoda',
-    role: 'Jedi Master',
-    age: 900,
-    forcePoints: 2000,
-  },
-  {
-    routeName: 'darthmaul',
-    name: 'Darth Maul',
-    role: 'Sith Lord',
-    age: 200,
-    forcePoints: 1200,
-  },
-  {
-    routeName: 'obiwankenobi',
-    name: 'Obi Wan Kenobi',
-    role: 'Jedi Master',
-    age: 55,
-    forcePoints: 1350,
-  },
-];*/
+app.use(express.static("public")) /// to access files in public folder
 
 // Routes
 
 // Basic route that sends the user first to the AJAX Page
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, './public/index.html')));
 
-app.get('/notes', (req, res) => res.sendFile(path.join(__dirname, 'notes.html')));
+app.get('/notes', (req, res) => res.sendFile(path.join(__dirname, './public/notes.html')));
 
-// Displays all characters
-//app.get('/api/characters', (req, res) => res.json(characters));
+// Displays all Notes
+app.get('/api/notes', (req, res) => res.json(notes));
 
+/// Delete note
+app.delete('/api/notes/:id', (req, res) => { 
+  const updNote = req.body;
+  const noteId = req.params.id;
+  console.log(noteId);
+  console.log(updNote);
+  for (let i = 0; i < notes.length; i++) {
+    if (noteId === notes[i].id) {
+      delete notes[i];
+    }
+  }
+
+  fs.writeFile("db/db.json", JSON.stringify(notes), err => {
+    if (err) throw err; // Checking for errors
+    console.log("Done deleting"); // Success
+  });
+
+  res.json(newNote);
+});
+
+/// Update Note
+app.put('/api/notes/:id', (req, res) => { 
+  const updNote = req.body;
+  const noteId = req.params.id;
+  console.log(noteId);
+  console.log(updNote);
+  for (let i = 0; i < notes.length; i++) {
+    if (noteId === notes[i].id) {
+      notes[i] = updNote;
+    }
+  }
+
+  fs.writeFile("db/db.json", JSON.stringify(notes), err => {
+    if (err) throw err; // Checking for errors
+    console.log("Done updating"); // Success
+  });
+
+  res.json(newNote);
+});
 // Displays a single character, or returns false
 /*app.get('/api/characters/:character', (req, res) => {
   const chosen = req.params.character;
@@ -61,23 +77,16 @@ app.get('/notes', (req, res) => res.sendFile(path.join(__dirname, 'notes.html'))
 });*/
 
 // Create New Notes - takes in JSON input
-app.post('/api/notes', (req, res) => {
-  // req.body hosts is equal to the JSON post sent from the user
+// req.body hosts is equal to the JSON post sent from the user
   // This works because of our body parsing middleware
+app.post('/api/notes', (req, res) => { 
   const newNote = req.body;
   const noteId = uuidv4();
   newNote.id = noteId;
-  // Using a RegEx Pattern to remove spaces from newCharacter
-  // You can read more about RegEx Patterns later https://www.regexbuddy.com/regex.html
-  
-  newNote.title = newNote.title.replace(/\s+/g, '');
-  newNote.text = newNote.text.replace(/\s+/g, '');
   console.log(newNote);
-  
   notes.push(newNote);
-  fs.writeFile(".db/db.json", JSON.stringify(notes), err => {
-    // Checking for errors
-    if (err) throw err; 
+  fs.writeFile("db/db.json", JSON.stringify(notes), err => {
+    if (err) throw err; // Checking for errors
     console.log("Done writing"); // Success
   });
 
